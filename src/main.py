@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import date
 import sys
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Tuple
 
 from pylatex.base_classes import (
     BaseLaTeXClass,
@@ -327,14 +327,28 @@ def generate_certifications_and_awards(
                 generator.generate(doc)
 
 
-def generate_skills(doc: Document, skills: List[Skill]):
+def generate_skills_and_interests(
+    doc: Document, skills: Optional[List[Skill]], interests: Optional[List[str]]
+):
     with doc.create(Section("Skills")):
-        generate_section_title(doc, "Skills")
+        if skills is None:
+            section_title = "Interests"
+        elif interests is None:
+            section_title = "Skills"
+        else:
+            section_title = "Skills & Interests"
+        generate_section_title(doc, section_title)
 
-        for skill in skills:
-            doc.append(italic(skill.name))
+        to_process: List[Tuple[str, List[str]]] = list()
+        if skills is not None:
+            to_process.extend([(skill.name, skill.keywords) for skill in skills])
+        if interests is not None:
+            to_process.append(("Interests", interests))
+
+        for name, keywords in to_process:
+            doc.append(italic(name))
             doc.append(": ")
-            doc.append(", ".join(skill.keywords))
+            doc.append(", ".join(keywords))
             doc.append(NewLine())
 
 
@@ -348,8 +362,8 @@ def generate_body(doc: Document, resume: Resume):
         generate_projects(doc, resume.projects)
     if resume.certificates is not None or resume.awards is not None:
         generate_certifications_and_awards(doc, resume.certificates, resume.awards)
-    if resume.skills is not None:
-        generate_skills(doc, resume.skills)
+    if resume.skills is not None or resume.interests is not None:
+        generate_skills_and_interests(doc, resume.skills, resume.interests)
 
 
 def generate_doc(resume: Resume) -> Document:
@@ -391,7 +405,7 @@ def main():
     generated_doc = generate_doc(my_resume)
 
     with open("out.tex", "w") as fp:
-        generated_doc.dump(fp)
+        fp.write(NoEscape(generated_doc.dumps().replace("LaTeX", r"\LaTeX{}")))
 
 
 if __name__ == "__main__":

@@ -81,11 +81,6 @@ class Language(BaseModel):
     fluency: str
 
 
-class Interest(BaseModel):
-    name: str
-    keywords: List[str]
-
-
 class Project(BaseModel):
     name: str
     start_date: date
@@ -104,5 +99,5 @@ class Resume(BaseModel):
     awards: Optional[List[Award]] = None
     skills: Optional[List[Skill]] = None
     languages: Optional[List[Language]] = None
-    interests: Optional[List[Interest]] = None
+    interests: Optional[List[str]] = None
     projects: Optional[List[Project]] = None
